@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Weekly Dashboard — Joy W199</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #ede8df; }
+  button { cursor: pointer; outline: none; border: none; background: none; }
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px);
+    background: #3d4a5c; color: #fff; padding: 8px 18px; border-radius: 20px;
+    font-family: 'Geologica', sans-serif; font-size: 12px;
+    opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 999;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="toast"></div>
+<input type="file" id="importFile" accept=".json" style="display:none">
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ── Colors ────────────────────────────────────────────────────────────────────
+const BG = "#ede8df", SURFACE = "#e4ddd3", CARD = "#f0ece5", BORDER = "#d4cab8";
+const SELECTED_BG = "#8a9eba";
+const TEXT_PRIMARY = "#1a1a1a", TEXT_SECONDARY = "#6b6056", TEXT_MUTED = "#a09282";
+const C_MEETING = "#695773", C_DESIGN = "#e08d53";
+const C_DEPT_DBC = "#d38989", C_DEPT_DESIGN = "#e08d53", C_DEPT_CROSS = "#8394a8";
+const C_CARRYOVER = "#a09282";
+
+// ── Next Week Calendar ───────────────────────────────────────────────────────
+const nextWeekEvents = {
+  mon: [
+    { time: "16:30–17:00", title: "[Design] 設計週會", with: "設計全員" },
+  ],
+  tue: [
+    { time: "14:00–15:00", title: "Joy 1 on 1", with: "Yaya" },
+  ],
+  wed: [],
+  thu: [
+    { time: "10:00–11:00", title: "OPS meeting", with: "Jimmy" },
+  ],
+  fri: [],
+};
+const NEXT_DAYS = [
+  { key: "mon", label: "MON", date: "3/16" },
+  { key: "tue", label: "TUE", date: "3/17" },
+  { key: "wed", label: "WED", date: "3/18" },
+  { key: "thu", label: "THU", date: "3/19" },
+  { key: "fri", label: "FRI", date: "3/20" },
+];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const isNotionMeeting = (t) => t?.startsWith("[Meeting]");
+const getDeptColor = (dept, title) => {
+  if (isNotionMeeting(title)) return C_MEETING;
+  if (!dept) return TEXT_MUTED;
+  if (dept.includes("DBC")) return C_DEPT_DBC;
+  if (dept.includes("Design")) return C_DEPT_DESIGN;
+  return C_DEPT_CROSS;
+};
+const getDeptLabel = (dept, title) => {
+  if (isNotionMeeting(title)) return "Meeting";
+  if (!dept) return "";
+  if (dept.includes("Follow") || dept.includes("跨部門")) return "跨部門";
+  if (dept.includes("Design")) return "Design";
+  if (dept.includes("DBC")) return "DBC";
+  return dept;
+};
+
+const taskDoneKey   = (dayKey, idx)                    => `t:${dayKey}::${idx}`;
+const eventDoneKey  = (dayKey, idx)                    => `e:${dayKey}::${idx}`;
+const carryDoneKey  = (displayDayKey, originKey, idx)  => `carry:${displayDayKey}::${originKey}::${idx}`;
+const LS_KEY = "done-w199";
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+const DAYS = [
+  { key: "mon", label: "MON", date: "3/9"  },
+  { key: "tue", label: "TUE", date: "3/10" },
+  { key: "wed", label: "WED", date: "3/11" },
+  { key: "thu", label: "THU", date: "3/12" },
+  { key: "fri", label: "FRI", date: "3/13" },
+];
+
+const calendarEvents = {
+  mon: [
+    { time: "11:00–12:00", title: "OPS Meeting", with: "Jimmy" },
+    { time: "16:00–17:00", title: "設計週會 & Retro", with: "設計全員" },
+  ],
+  tue: [
+    { time: "14:00–15:00", title: "實習生面試討論", with: "Fish" },
+  ],
+  wed: [
+    { time: "11:00–13:00", title: "面談(Office): 王勤雯 (視覺設計PT)", with: "HR, Yaya, Fish" },
+    { time: "12:15–13:00", title: "AI Agent 實作班", with: "Phoebe" },
+  ],
+  thu: [
+    { time: "10:00–12:00", title: "All-hands Meeting (Mar.2026)", with: "全公司" },
+    { time: "14:00–15:00", title: "[ops] notion教學", with: "Yua" },
+    { time: "15:30–16:30", title: "DBC 設計師量能更新會議", with: "設計部" },
+    { time: "18:00–21:00", title: "🧨 春酒 🧧", with: "全公司" },
+  ],
+  fri: [],
+};
+
+const notionTasks = {
+  mon: [
+    { title: "[Meeting]16.00 設計週會", dept: "Design team / AlleyPin", pts: 0.5 },
+    { title: "TW-AM 合約更新＋產品命轉譯", dept: "專案Follow / 跨部門", pts: 0.35 },
+    { title: "[Meeting] 11.00 OPS", dept: "專案Follow / 跨部門", pts: 0.25 },
+    { title: "[耀美]No.當答案都是 拔牙", dept: "DBC", pts: 0.25 },
+    { title: "[耀美]No.植牙頁面視覺稿", dept: "DBC", pts: 1 },
+    { title: "[陳威樺]No.假牙內有放牙釘的必要嗎…", dept: "DBC", pts: 0.25 },
+  ],
+  tue: [
+    { title: "[愛菲爾]No.棒球贏在防守，牙齒穩在日常清潔！", dept: "DBC", pts: 0.25 },
+    { title: "官網設計系統", dept: "Design team / AlleyPin", pts: 1 },
+    { title: "[Meeting] 14.00 實習生面試討論 Fish & Joy", dept: "Design team / AlleyPin", pts: 0.25 },
+  ],
+  wed: [
+    { title: "[蔡宛霖]No.", dept: "DBC", pts: 0.25 },
+    { title: "[大串]No.", dept: "DBC", pts: 0.35 },
+    { title: "[Meeting] 11.00 面試實習生", dept: "Design team / AlleyPin", pts: 0.5 },
+    { title: "[耀美]No.牙周病專科治療", dept: "DBC", pts: 0.25 },
+    { title: "追蹤 TW - AM 確認資訊後續", dept: "專案Follow / 跨部門", pts: 0.25 },
+  ],
+  thu: [
+    { title: "[愛菲爾]No.", dept: "DBC", pts: 0.25 },
+    { title: "[Meeting] 月會", dept: "Design team / AlleyPin", pts: 1 },
+    { title: "[Meeting] 14.00 OPS", dept: "專案Follow / 跨部門", pts: 0.25 },
+    { title: "調整Docusign 轉發問題，找Ethan 設定", dept: "專案Follow / 跨部門", pts: 0.125 },
+  ],
+  fri: [
+    { title: "[一森診所]No.", dept: "DBC", pts: 0.75 },
+    { title: "[蔡宛霖]No.", dept: "DBC", pts: 0.25 },
+    { title: "[耀美網站]No.植牙切版", dept: "DBC", pts: 1.25 },
+    { title: "[陳威樺]No.", dept: "DBC", pts: 0.25 },
+    { title: "設計部獎金制機器人進度", dept: "Design team / AlleyPin", pts: 2 },
+  ],
+};
+
+// ── Checkbox ──────────────────────────────────────────────────────────────────
+function Checkbox({ onDone }) {
+  const [h, setH] = useState(false);
+  return (
+    <button onClick={onDone} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
+      style={{ marginTop: 3, flexShrink: 0, width: 14, height: 14, borderRadius: 3,
+        border: `1.5px solid ${h ? "#7aad8a" : BORDER}`,
+        background: h ? "rgba(122,173,138,0.15)" : "transparent",
+        transition: "all 0.15s",
+      }} />
+  );
+}
+
+// ── TaskCard ──────────────────────────────────────────────────────────────────
+function TaskCard({ task, onDone, carryFrom }) {
+  const deptColor = carryFrom ? C_CARRYOVER : getDeptColor(task.dept, task.title);
+  const deptLabel = getDeptLabel(task.dept, task.title);
+  return (
+    <div style={{ background: BG, border: `1px solid ${BORDER}`, borderLeft: `6px solid ${deptColor}`,
+      borderRadius: "0 6px 6px 0", padding: "7px 10px",
+      display: "flex", alignItems: "flex-start", gap: 8, opacity: carryFrom ? 0.85 : 1 }}>
+      <Checkbox onDone={onDone} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: 11.5,
+          color: TEXT_PRIMARY, lineHeight: 1.5, marginBottom: 4, fontWeight: 500 }}>{task.title}</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <span style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9,
+              color: deptColor, fontWeight: 600, letterSpacing: "0.04em" }}>{deptLabel}</span>
+            {carryFrom && <span style={{ fontFamily: "'Geologica', sans-serif", fontSize: 8,
+              color: C_CARRYOVER, fontWeight: 500 }}>← {carryFrom}</span>}
+          </div>
+          <span style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9,
+            color: "#666", fontWeight: 700 }}>{task.pts}p</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── EventCard ─────────────────────────────────────────────────────────────────
+function EventCard({ ev, onDone }) {
+  return (
+    <div style={{ background: BG, border: `1px solid ${BORDER}`, borderLeft: `6px solid ${C_MEETING}`,
+      borderRadius: "0 6px 6px 0", padding: "7px 10px",
+      display: "flex", alignItems: "flex-start", gap: 8 }}>
+      <Checkbox onDone={onDone} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9,
+          color: C_MEETING, fontWeight: 700, letterSpacing: "0.04em", marginBottom: 2 }}>{ev.time}</div>
+        <div style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: 11.5,
+          color: TEXT_PRIMARY, lineHeight: 1.4, fontWeight: 500 }}>{ev.title}</div>
+        {ev.with && <div style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9,
+          color: TEXT_MUTED, marginTop: 2 }}>w/ {ev.with}</div>}
+      </div>
+    </div>
+  );
+}
+
+// ── Section Header ────────────────────────────────────────────────────────────
+function SectionHeader({ dot, label, right }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+      <div style={{ width: 6, height: 6, borderRadius: "50%", background: dot }} />
+      <span style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9, color: TEXT_MUTED,
+        letterSpacing: "0.12em", textTransform: "uppercase" }}>{label}</span>
+      {right && <div style={{ marginLeft: "auto" }}>{right}</div>}
+    </div>
+  );
+}
+
+// ── Weekly Review (Friday) ────────────────────────────────────────────────────
+function WeeklyReview({ doneSet, taskData }) {
+  const undone = [];
+  DAYS.forEach(day => {
+    ((taskData || notionTasks)[day.key] || []).forEach((t, i) => {
+      const done = doneSet.has(taskDoneKey(day.key, i)) ||
+        DAYS.some(ld => doneSet.has(carryDoneKey(ld.key, day.key, i)));
+      if (!done) undone.push({ task: t, originDay: day });
+    });
+  });
+
+  if (undone.length === 0) return (
+    <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 10,
+      padding: 14, marginBottom: 8 }}>
+      <SectionHeader dot="#7aad8a" label="本週總覽" />
+      <div style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: 12,
+        color: "#7aad8a", textAlign: "center", padding: "10px 0" }}>🎉 本週全部完成！</div>
+    </div>
+  );
+
+  return (
+    <div style={{ background: CARD, border: `1.5px solid #c9bfb0`, borderRadius: 10,
+      padding: 14, marginBottom: 8 }}>
+      <SectionHeader dot={C_CARRYOVER} label="本週未完成"
+        right={<span style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9,
+          color: "#a09282", fontWeight: 700 }}>{undone.length} 項</span>} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+        {undone.map(({ task, originDay }, i) => {
+          const dc = getDeptColor(task.dept, task.title);
+          return (
+            <div key={i} style={{ background: BG, border: `1px solid ${BORDER}`,
+              borderLeft: `6px solid ${dc}`, borderRadius: "0 6px 6px 0",
+              padding: "7px 10px", display: "flex", gap: 8, opacity: 0.8 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: 11.5,
+                  color: TEXT_PRIMARY, lineHeight: 1.5, marginBottom: 4, fontWeight: 500 }}>{task.title}</div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <span style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9,
+                      color: dc, fontWeight: 600 }}>{getDeptLabel(task.dept, task.title)}</span>
+                    <span style={{ fontFamily: "'Geologica', sans-serif", fontSize: 8,
+                      color: TEXT_MUTED, fontWeight: 500 }}>{originDay.label}</span>
+                  </div>
+                  <span style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9,
+                    color: "#666", fontWeight: 700 }}>{task.pts}p</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── DayColumn ─────────────────────────────────────────────────────────────────
+function DayColumn({ dayInfo, doneSet, onDone, carryoverTasks, taskData }) {
+  const allTasks = ((taskData || notionTasks)[dayInfo.key] || []).map((t, i) => ({ ...t, _idx: i }));
+  const tasks = allTasks.filter(t => !doneSet.has(taskDoneKey(dayInfo.key, t._idx)));
+  const allEvents = (calendarEvents[dayInfo.key] || []).map((e, i) => ({ ...e, _idx: i }));
+  const events = allEvents.filter(e => !doneSet.has(eventDoneKey(dayInfo.key, e._idx)));
+  const totalPts = tasks.reduce((s, t) => s + t.pts, 0);
+  const taskDone = allTasks.filter(t => doneSet.has(taskDoneKey(dayInfo.key, t._idx))).length;
+  const visibleCarry = carryoverTasks.filter(c =>
+    !doneSet.has(carryDoneKey(dayInfo.key, c.originKey, c._idx))
+  );
+
+  return (
+    <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+      {/* Calendar */}
+      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12 }}>
+        <SectionHeader dot={C_MEETING} label="Calendar" />
+        {events.length === 0
+          ? <div style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: 11,
+              color: TEXT_MUTED, textAlign: "center", padding: "10px 0" }}>—</div>
+          : <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              {events.map(ev => (
+                <EventCard key={`${dayInfo.key}-ev-${ev._idx}`} ev={ev}
+                  onDone={() => onDone(eventDoneKey(dayInfo.key, ev._idx))} />
+              ))}
+            </div>
+        }
+      </div>
+
+      {/* Notion tasks */}
+      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, flex: 1 }}>
+        <SectionHeader dot={C_DESIGN} label="Notion"
+          right={
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              {taskDone > 0 && <span style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9,
+                color: "#7aad8a", fontWeight: 600 }}>✓ {taskDone}</span>}
+              {totalPts > 0 && <span style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9,
+                color: "#3d4a5c", fontWeight: 700 }}>{totalPts}p</span>}
+            </div>
+          }
+        />
+        {tasks.length === 0 && visibleCarry.length === 0
+          ? <div style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: 12,
+              color: taskDone > 0 ? "#7aad8a" : TEXT_MUTED, textAlign: "center", padding: "14px 0" }}>
+              {taskDone > 0 ? "✓ 全部完成" : "—"}
+            </div>
+          : <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              {tasks.map(t => (
+                <TaskCard key={`${dayInfo.key}-task-${t._idx}`} task={t}
+                  onDone={() => onDone(taskDoneKey(dayInfo.key, t._idx))} />
+              ))}
+              {visibleCarry.length > 0 && <>
+                {tasks.length > 0 && <div style={{ borderTop: `1px dashed ${BORDER}`, margin: "4px 0" }} />}
+                {visibleCarry.map((c, i) => (
+                  <TaskCard key={`carry-${dayInfo.key}-${c.originKey}-${c._idx}`} task={c}
+                    carryFrom={c.originLabel}
+                    onDone={() => onDone(carryDoneKey(dayInfo.key, c.originKey, c._idx))} />
+                ))}
+              </>}
+            </div>
+        }
+      </div>
+    </div>
+  );
+}
+
+// ── NextWeekView ─────────────────────────────────────────────────────────────
+function NextWeekView() {
+  return (
+    <div style={{ padding: "0 0 20px" }}>
+      <div style={{ fontFamily: "'Geologica', sans-serif", fontSize: 11, color: TEXT_MUTED,
+        letterSpacing: "0.08em", marginBottom: 14, paddingLeft: 2 }}>
+        03.16 – 03.20
+      </div>
+      {NEXT_DAYS.map(day => {
+        const evs = nextWeekEvents[day.key] || [];
+        return (
+          <div key={day.key} style={{ marginBottom: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+              <span style={{ fontFamily: "'Geologica', sans-serif", fontSize: 10, fontWeight: 700,
+                color: TEXT_SECONDARY, letterSpacing: "0.08em", minWidth: 32 }}>{day.label}</span>
+              <span style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9,
+                color: TEXT_MUTED }}>{day.date}</span>
+              {evs.length === 0 && (
+                <span style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: 10,
+                  color: TEXT_MUTED, opacity: 0.5 }}>—</span>
+              )}
+            </div>
+            {evs.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 5, paddingLeft: 4 }}>
+                {evs.map((ev, i) => (
+                  <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`,
+                    borderLeft: `6px solid ${C_MEETING}`,
+                    borderRadius: "0 8px 8px 0", padding: "7px 12px",
+                    display: "flex", alignItems: "flex-start", gap: 10 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9,
+                        color: C_MEETING, fontWeight: 700, letterSpacing: "0.04em", marginBottom: 2 }}>{ev.time}</div>
+                      <div style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: 11.5,
+                        color: TEXT_PRIMARY, fontWeight: 500, lineHeight: 1.4 }}>{ev.title}</div>
+                      {ev.with && <div style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9,
+                        color: TEXT_MUTED, marginTop: 2 }}>w/ {ev.with}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+function WeeklyDashboard() {
+  const [view, setView] = useState('thisWeek'); // 'thisWeek' | 'nextWeek'
+  const [startIdx, setStartIdx] = useState(0);
+  const [doneSet, setDoneSet] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS_KEY);
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
+  const [taskData] = useState(notionTasks);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState(null);
+  const visible = DAYS.slice(startIdx, startIdx + 2);
+
+  // Save to localStorage whenever doneSet changes
+  useEffect(() => {
+    try { localStorage.setItem(LS_KEY, JSON.stringify([...doneSet])); } catch {}
+  }, [doneSet]);
+
+  const handleDone = (id) => setDoneSet(prev => new Set([...prev, id]));
+
+  // ── Export ────────────────────────────────────────────────────────────────
+  const handleExport = () => {
+    const payload = { week: "w199", ts: new Date().toISOString(), done: [...doneSet] };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "done-w199.json"; a.click();
+    URL.revokeObjectURL(url);
+    showToast("✓ 已匯出打勾狀態");
+  };
+
+  // ── Import ────────────────────────────────────────────────────────────────
+  const handleImport = () => document.getElementById("importFile").click();
+  useEffect(() => {
+    const input = document.getElementById("importFile");
+    const handler = (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const obj = JSON.parse(ev.target.result);
+          const arr = Array.isArray(obj) ? obj : (obj.done || []);
+          setDoneSet(new Set(arr));
+          showToast("✓ 匯入成功，狀態已同步");
+        } catch { showToast("✗ 格式錯誤，匯入失敗"); }
+        input.value = "";
+      };
+      reader.readAsText(file);
+    };
+    input.addEventListener("change", handler);
+    return () => input.removeEventListener("change", handler);
+  }, []);
+
+  // ── Notion Sync ───────────────────────────────────────────────────────────
+  const JOY_ID = "user://1a59b1f2-b650-4d70-a70d-6e0b333e8962";
+  const WEEK_DATES = {"2026-03-09":"mon","2026-03-10":"tue","2026-03-11":"wed","2026-03-12":"thu","2026-03-13":"fri"};
+  const normDept = (d) => {
+    if (!d) return "DBC";
+    const s = d.trim();
+    if (s.includes("Follow") || s.includes("跨")) return "專案Follow / 跨部門";
+    if (s.includes("Design")) return "Design team / AlleyPin";
+    return "DBC";
+  };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514", max_tokens: 4000,
+          system: "You are a Notion data assistant. Use the notion-query-database-view tool to query the given view URL. Return ONLY the raw JSON results array, no other text.",
+          messages: [{ role: "user", content: "Query this view and return the full results JSON array: https://www.notion.so/alleypin/4f701cf0df2546b9a32705f8208c4aeb?v=b1ebc871408041f283248e3f7f6dc6aa" }],
+          mcp_servers: [{ type: "url", url: "https://mcp.notion.com/mcp", name: "notion-mcp" }]
+        })
+      });
+      const data = await res.json();
+      let results = null;
+      for (const block of (data.content || [])) {
+        try {
+          const raw = block.type === "mcp_tool_result" ? JSON.stringify(block.content)
+            : block.type === "text" ? block.text : null;
+          if (!raw) continue;
+          const p = JSON.parse(raw.replace(/```json|```/g, "").trim());
+          if (p?.results) { results = p.results; break; }
+          if (Array.isArray(p)) { results = p; break; }
+        } catch {}
+      }
+      if (!results?.length) throw new Error("No results");
+      const newData = { mon:[], tue:[], wed:[], thu:[], fri:[] };
+      for (const r of results) {
+        const day = WEEK_DATES[r["date:期限:start"]];
+        if (!day) continue;
+        if (!(r["Assign"] || "").includes(JOY_ID)) continue;
+        newData[day].push({ title: r["Name"] || "", dept: normDept(r["Department "] || ""), pts: r["Story points"] || 0 });
+      }
+      if (Object.values(newData).flat().length > 0) {
+        setLastSync(new Date().toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" }));
+        showToast("✓ Notion 同步完成");
+      }
+    } catch (e) { showToast("✗ 同步失敗"); }
+    setSyncing(false);
+  };
+
+  // ── Carryover ─────────────────────────────────────────────────────────────
+  const isTaskDone = (dayKey, idx) =>
+    doneSet.has(taskDoneKey(dayKey, idx)) ||
+    DAYS.some(d => doneSet.has(carryDoneKey(dayKey, d.key, idx)));
+
+  const getCarryoverForDay = (dayIdx) => {
+    if (dayIdx === 0) return [];
+    const carry = [];
+    for (let i = 0; i < dayIdx; i++) {
+      const d = DAYS[i];
+      ((taskData || notionTasks)[d.key] || []).forEach((t, idx) => {
+        if (!isTaskDone(d.key, idx))
+          carry.push({ ...t, _idx: idx, originKey: d.key, originLabel: d.label });
+      });
+    }
+    return carry;
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  return (
+    <div style={{ background: BG, minHeight: "100vh", padding: "20px 16px" }}>
+      {/* Header */}
+      <div style={{ marginBottom: 16, display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+        <div>
+          <div style={{ fontFamily: "'Geologica', sans-serif", fontSize: 18, fontWeight: 700,
+            color: TEXT_PRIMARY, letterSpacing: "-0.02em" }}>This Week working hours in AlleyPin</div>
+          <div style={{ fontFamily: "'Geologica', sans-serif", fontSize: 11, color: TEXT_MUTED, marginTop: 2 }}>
+            {view === 'thisWeek' ? '03.09 – 03.13' : '03.16 – 03.20'} · Joy
+            {view === 'thisWeek' && lastSync && <span style={{ marginLeft: 8, opacity: 0.6 }}>· Notion 更新於 {lastSync}</span>}
+          </div>
+          {/* Week toggle */}
+          <div style={{ display: "flex", gap: 5, marginTop: 10 }}>
+            {[{id:'thisWeek',label:'THIS WEEK'},{id:'nextWeek',label:'NEXT WEEK'}].map(w => (
+              <button key={w.id} onClick={() => setView(w.id)}
+                style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9, fontWeight: 600,
+                  letterSpacing: "0.06em", padding: "4px 12px",
+                  background: view === w.id ? SELECTED_BG : SURFACE,
+                  color: view === w.id ? "#fff" : TEXT_SECONDARY,
+                  border: `1.5px solid ${view === w.id ? SELECTED_BG : BORDER}`,
+                  borderRadius: 6, transition: "all 0.15s" }}>
+                {w.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+          {/* Notion sync — only in thisWeek view */}
+          {view === 'thisWeek' && <>
+          <button onClick={handleSync} disabled={syncing}
+            style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9, fontWeight: 600,
+              letterSpacing: "0.06em", color: syncing ? TEXT_MUTED : "#3d4a5c",
+              background: syncing ? SURFACE : CARD, border: `1px solid ${BORDER}`,
+              borderRadius: 6, padding: "5px 10px", transition: "all 0.15s" }}>
+            {syncing ? "同步中…" : "↻ Notion"}
+          </button>
+
+          {/* Export */}
+          <button onClick={handleExport}
+            style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9, fontWeight: 600,
+              letterSpacing: "0.06em", color: "#3d4a5c",
+              background: CARD, border: `1px solid ${BORDER}`,
+              borderRadius: 6, padding: "5px 10px", transition: "all 0.15s" }}>
+            ↓ 匯出
+          </button>
+
+          {/* Import */}
+          <button onClick={handleImport}
+            style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9, fontWeight: 600,
+              letterSpacing: "0.06em", color: "#3d4a5c",
+              background: CARD, border: `1px solid ${BORDER}`,
+              borderRadius: 6, padding: "5px 10px", transition: "all 0.15s" }}>
+            ↑ 匯入
+          </button>
+
+          {/* Legend */}
+          <div style={{ display: "flex", gap: 10, alignItems: "center", marginLeft: 4 }}>
+            {[{color:C_DEPT_DBC,label:"DBC"},{color:C_DEPT_DESIGN,label:"Design"},
+              {color:C_DEPT_CROSS,label:"跨部門"},{color:C_MEETING,label:"Meeting"}].map(({color,label}) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 7, height: 3, borderRadius: 2, background: color }} />
+                <span style={{ fontFamily: "'Geologica', sans-serif", fontSize: 9, color: TEXT_MUTED }}>{label}</span>
+              </div>
+            ))}
+          </div>
+          </>}
+        </div>
+      </div>
+
+      {/* Main content — conditional on view */}
+      {view === 'nextWeek' ? <NextWeekView /> : (<>
+
+      {/* Day tabs */}
+      <div style={{ display: "flex", gap: 5, marginBottom: 14 }}>
+        {DAYS.map((d, i) => {
+          const isActive = i === startIdx || i === startIdx + 1;
+          const allTasks = ((taskData || notionTasks)[d.key] || []).map((t, idx) => ({ ...t, _idx: idx }));
+          const remaining = allTasks.filter(t => !doneSet.has(taskDoneKey(d.key, t._idx))).length;
+          const hasCal = (calendarEvents[d.key] || []).length > 0;
+          const allDone = allTasks.length > 0 && remaining === 0;
+          const hasCarry = getCarryoverForDay(i).length > 0;
+          return (
+            <button key={d.key} onClick={() => setStartIdx(Math.min(i, DAYS.length - 2))}
+              style={{ flex: 1, padding: "8px 4px 6px",
+                background: isActive ? SELECTED_BG : SURFACE,
+                border: `1.5px solid ${isActive ? SELECTED_BG : BORDER}`,
+                borderRadius: 9, color: isActive ? "#fff" : TEXT_SECONDARY,
+                fontFamily: "'Geologica', sans-serif", fontSize: 10,
+                fontWeight: isActive ? 700 : 400, letterSpacing: "0.07em",
+                transition: "all 0.15s" }}>
+              <div>{d.label}</div>
+              <div style={{ fontSize: 9, marginTop: 1, opacity: 0.75 }}>{d.date}</div>
+              <div style={{ display: "flex", gap: 3, justifyContent: "center", marginTop: 4 }}>
+                {hasCal && <div style={{ width: 4, height: 4, borderRadius: "50%",
+                  background: isActive ? "rgba(255,255,255,0.7)" : C_MEETING }} />}
+                {hasCarry && <div style={{ width: 4, height: 4, borderRadius: "50%",
+                  background: isActive ? "rgba(255,255,255,0.7)" : C_CARRYOVER }} />}
+                {allDone
+                  ? <div style={{ width: 4, height: 4, borderRadius: "50%",
+                      background: isActive ? "rgba(255,255,255,0.7)" : "#7aad8a" }} />
+                  : remaining > 0 && <div style={{ width: 4, height: 4, borderRadius: "50%",
+                      background: isActive ? "rgba(255,255,255,0.7)" : C_DESIGN }} />
+                }
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Two-column */}
+      <div style={{ display: "flex", gap: 10 }}>
+        {visible.map((d) => {
+          const dayIdx = DAYS.findIndex(x => x.key === d.key);
+          const isFri = d.key === "fri";
+          return (
+            <div key={d.key} style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: "'Geologica', sans-serif", fontSize: 11, fontWeight: 700,
+                color: TEXT_SECONDARY, letterSpacing: "0.08em", marginBottom: 8, paddingLeft: 2 }}>
+                {d.label} <span style={{ fontWeight: 400, color: TEXT_MUTED }}>{d.date}</span>
+              </div>
+              {isFri && <WeeklyReview doneSet={doneSet} taskData={taskData} />}
+              <DayColumn dayInfo={d} doneSet={doneSet} onDone={handleDone}
+                carryoverTasks={getCarryoverForDay(dayIdx)} taskData={taskData} />
+            </div>
+          );
+        })}
+      </div>
+      </>)}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<WeeklyDashboard />);
+</script>
+</body>
+</html>
