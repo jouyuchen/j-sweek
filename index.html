@@ -135,16 +135,17 @@ const notionTasks = {
     {title:"追蹤 TW - AM 確認資訊後續",dept:"專案Follow / 跨部門",pts:0.25},
   ],
   thu:[
-    {title:"[愛菲爾]No.",dept:"DBC",pts:0.25},
-    {title:"[Meeting] 月會",dept:"Design team / AlleyPin",pts:1},
+    {title:"[愛菲爾]No.在你眼中，愛菲爾是間什麼樣的診所呢？",dept:"DBC",pts:0.25},
+    {title:"[Meeting]月會",dept:"Design team / AlleyPin",pts:1},
     {title:"[Meeting] 14.00 OPS",dept:"專案Follow / 跨部門",pts:0.25},
     {title:"調整Docusign 轉發問題，找Ethan 設定",dept:"專案Follow / 跨部門",pts:0.125},
   ],
   fri:[
-    {title:"[一森診所]No.",dept:"DBC",pts:0.75},
-    {title:"[蔡宛霖]No.",dept:"DBC",pts:0.25},
+    {title:"[一森診所]No.24 網站修改",dept:"DBC",pts:0.25},
+
+    {title:"[蔡宛霖]No.我的診間高效率三件套",dept:"DBC",pts:0.25},
     {title:"[耀美網站]No.植牙切版",dept:"DBC",pts:1.25},
-    {title:"[陳威樺]No.",dept:"DBC",pts:0.25},
+    {title:"[陳威樺]No.植牙的關鍵時刻",dept:"DBC",pts:0.25},
     {title:"設計部獎金制機器人進度",dept:"Design team / AlleyPin",pts:2},
   ],
 };
@@ -422,7 +423,7 @@ function WeeklyDashboard() {
     try{const s=localStorage.getItem(LS_DONE);return s?new Set(JSON.parse(s)):new Set();}
     catch{return new Set();}
   });
-  const [taskData]=useState(notionTasks);
+  const [taskData,setTaskData]=useState(notionTasks);
   const [syncing,setSyncing]=useState(false);
   const [lastSync,setLastSync]=useState(null);
   const [notionKey,setNotionKey]=useState(()=>{
@@ -509,11 +510,20 @@ function WeeklyDashboard() {
         if(!(r["Assign"]||"").includes(JOY_ID))continue;
         newData[day].push({title:r["Name"]||"",dept:normDept(r["Department "]||""),pts:r["Story points"]||0});
       }
-      if(Object.values(newData).flat().length>0){
-        setLastSync(new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"}));
-        showToast("✓ Notion 同步完成");
+      const count = Object.values(newData).flat().length;
+      if(count>0){
+        setTaskData(newData);
+        setLastSync(new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"}) + `，共 ${count} 筆`);
+        showToast(`✓ 同步完成，共 ${count} 筆工作票`);
+      } else {
+        showToast("⚠️ 同步完成但沒有找到票，請確認 view 設定");
       }
-    }catch(e){showToast("✗ 同步失敗，請確認 API Key");}
+    }catch(e){
+      const msg = e.message||'';
+      if(msg.includes('401')||msg.includes('auth')) showToast("✗ API Key 錯誤，請重新設定");
+      else if(msg.includes('No results')) showToast("⚠️ 沒找到票，請確認 Integration 有連結到 DB");
+      else showToast("✗ 同步失敗：" + (msg||'未知錯誤'));
+    }
     setSyncing(false);
   };
 
@@ -550,7 +560,7 @@ function WeeklyDashboard() {
             color:TEXT_PRIMARY,letterSpacing:"-0.02em"}}>This Week working hours in AlleyPin</div>
           <div style={{fontFamily:"'Geologica',sans-serif",fontSize:11,color:TEXT_MUTED,marginTop:2}}>
             {view==='thisWeek'?'03.09 – 03.13':'03.16 – 03.20'} · Joy
-            {view==='thisWeek'&&lastSync&&<span style={{marginLeft:8,opacity:0.6}}>· Notion 更新於 {lastSync}</span>}
+            {view==='thisWeek'&&lastSync&&<span style={{marginLeft:8,opacity:0.6,fontSize:10}}>✓ {lastSync}</span>}
           </div>
           {/* Week toggle */}
           <div style={{display:"flex",gap:5,marginTop:10}}>
@@ -571,15 +581,7 @@ function WeeklyDashboard() {
         {/* Action buttons — thisWeek only */}
         {view==='thisWeek'&&(
           <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center"}}>
-            <button onClick={handleSync} disabled={syncing}
-              style={{...BtnStyle,color:syncing?TEXT_MUTED:"#3d4a5c",background:syncing?SURFACE:CARD}}>
-              {syncing?"同步中…":notionKey?"↻ Notion":"↻ Notion ⚠️"}
-            </button>
-            <button onClick={()=>{setKeyInput('');setShowSettings(true);}}
-              title="Notion 設定"
-              style={{...BtnStyle,color:notionKey?"#7aad8a":TEXT_MUTED,fontSize:13,padding:"3px 8px"}}>
-              ⚙️
-            </button>
+
             <button onClick={handleExport} style={BtnStyle}>↓ 匯出</button>
             <button onClick={()=>document.getElementById("importFile").click()} style={BtnStyle}>↑ 匯入</button>
             <div style={{display:"flex",gap:10,alignItems:"center",marginLeft:4}}>
