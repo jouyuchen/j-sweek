@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Weekly Dashboard — Joy W199</title>
+<title>Weekly Dashboard — Joy W200</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
@@ -62,7 +62,7 @@ const getDeptLabel = (dept, title) => {
 const taskDoneKey  = (d,i)     => `t:${d}::${i}`;
 const eventDoneKey = (d,i)     => `e:${d}::${i}`;
 const carryDoneKey = (disp,orig,i) => `carry:${disp}::${orig}::${i}`;
-const LS_DONE = "done-w199";
+const LS_DONE = "done-w200";
 const LS_KEY  = "notion-api-key";
 
 function showToast(msg) {
@@ -79,74 +79,60 @@ const DAYS = [
   {key:"fri",label:"FRI",date:"3/13"},
 ];
 const NEXT_DAYS = [
-  {key:"mon",label:"MON",date:"3/16"},
-  {key:"tue",label:"TUE",date:"3/17"},
-  {key:"wed",label:"WED",date:"3/18"},
-  {key:"thu",label:"THU",date:"3/19"},
-  {key:"fri",label:"FRI",date:"3/20"},
+  {key:"mon",label:"MON",date:"3/23"},
+  {key:"tue",label:"TUE",date:"3/24"},
+  {key:"wed",label:"WED",date:"3/25"},
+  {key:"thu",label:"THU",date:"3/26"},
+  {key:"fri",label:"FRI",date:"3/27"},
 ];
 
 const calendarEvents = {
   mon:[
-    {time:"11:00–12:00",title:"OPS Meeting",with:"Jimmy"},
-    {time:"16:00–17:00",title:"設計週會 & Retro",with:"設計全員"},
+    {time:"16:30–17:00",title:"[Design] 設計週會",with:"設計全員"},
   ],
-  tue:[{time:"14:00–15:00",title:"實習生面試討論",with:"Fish"}],
+  tue:[{time:"14:00–15:00",title:"Joy 1 on 1",with:"Yaya"}],
   wed:[
-    {time:"11:00–13:00",title:"面談(Office): 王勤雯 (視覺設計PT)",with:"HR, Yaya, Fish"},
-    {time:"12:15–13:00",title:"AI Agent 實作班",with:"Phoebe"},
+    {time:"19:00–21:00",title:"Claude code 分享會",with:""},
   ],
   thu:[
-    {time:"10:00–12:00",title:"All-hands Meeting (Mar.2026)",with:"全公司"},
-    {time:"14:00–15:00",title:"[ops] notion教學",with:"Yua"},
-    {time:"15:30–16:30",title:"DBC 設計師量能更新會議",with:"設計部"},
-    {time:"18:00–21:00",title:"🧨 春酒 🧧",with:"全公司"},
+    {time:"10:00–11:00",title:"OPS meeting",with:"Jimmy"},
   ],
   fri:[],
 };
 
 const nextWeekEvents = {
-  mon:[{time:"16:30–17:00",title:"[Design] 設計週會",with:"設計全員"}],
-  tue:[{time:"14:00–15:00",title:"Joy 1 on 1",with:"Yaya"}],
-  wed:[],
-  thu:[{time:"10:00–11:00",title:"OPS meeting",with:"Jimmy"}],
-  fri:[],
+  mon:[{time:"16:00–17:00",title:"[Design] 設計週會＆ Retro",with:"設計全員"}],
+  tue:[],
+  wed:[{time:"14:30–16:30",title:"wordpress workshop",with:"joy / 哲均 / 太郎"}],
+  thu:[{time:"11:00–12:00",title:"OPS meeting",with:"Jimmy"}],
+  fri:[
+    {time:"14:00–15:00",title:"[季任務] Workshop 內容討論會議",with:""},
+  ],
 };
 
 const notionTasks = {
   mon:[
-    {title:"[Meeting]16.00 設計週會",dept:"Design team / AlleyPin",pts:0.5},
-    {title:"TW-AM 合約更新＋產品命轉譯",dept:"專案Follow / 跨部門",pts:0.35},
-    {title:"[Meeting] 11.00 OPS",dept:"專案Follow / 跨部門",pts:0.25},
-    {title:"[耀美]No.當答案都是 拔牙",dept:"DBC",pts:0.25},
-    {title:"[耀美]No.植牙頁面視覺稿",dept:"DBC",pts:1},
-    {title:"[陳威樺]No.假牙內有放牙釘的必要嗎…",dept:"DBC",pts:0.25},
+    {title:"[Meeting]16.30 設計週會",dept:"Design team / AlleyPin",pts:0.25},
+    {title:"TW - AM 續約合約發送測試",dept:"專案Follow / 跨部門",pts:0.25},
+    {title:"視覺設計師DBC 開票功能優化",dept:"Design team / AlleyPin",pts:1},
+    {title:"[蔡宛霖]No.你心目中的高品質醫療是什麼？",dept:"DBC",pts:0.25},
   ],
   tue:[
-    {title:"[愛菲爾]No.棒球贏在防守，牙齒穩在日常清潔！",dept:"DBC",pts:0.25},
-    {title:"官網設計系統",dept:"Design team / AlleyPin",pts:1},
-    {title:"[Meeting] 14.00 實習生面試討論 Fish & Joy",dept:"Design team / AlleyPin",pts:0.25},
+    {title:"[陳威樺] No.舊假牙發黑又飄異味 就像開口就漏餡",dept:"DBC",pts:0.25},
+    {title:"[Meeting] 14.00 1 on 1 with Joy",dept:"Design team / AlleyPin",pts:0.25},
   ],
   wed:[
     {title:"[蔡宛霖]No.",dept:"DBC",pts:0.25},
-    {title:"[大串]No.",dept:"DBC",pts:0.35},
-    {title:"[Meeting] 11.00 面試實習生",dept:"Design team / AlleyPin",pts:0.5},
-    {title:"[耀美]No.牙周病專科治療",dept:"DBC",pts:0.25},
-    {title:"追蹤 TW - AM 確認資訊後續",dept:"專案Follow / 跨部門",pts:0.25},
+    {title:"[陳威樺] No.明明愛笑卻不敢張口 客製化陶瓷貼片",dept:"DBC",pts:0.25},
+    {title:"官網設計系統",dept:"Design team / AlleyPin",pts:1},
+    {title:"設計部獎金制機器人進度",dept:"Design team / AlleyPin",pts:1},
+    {title:"Tw-AM 合約系統文件製作*2",dept:"專案Follow / 跨部門",pts:0.75},
   ],
   thu:[
-    {title:"[愛菲爾]No.在你眼中，愛菲爾是間什麼樣的診所呢？",dept:"DBC",pts:0.25},
-    {title:"[Meeting]月會",dept:"Design team / AlleyPin",pts:1},
-    {title:"[Meeting] 14.00 OPS",dept:"專案Follow / 跨部門",pts:0.25},
-    {title:"調整Docusign 轉發問題，找Ethan 設定",dept:"專案Follow / 跨部門",pts:0.125},
+    {title:"[Meeting] 10.00 OPS",dept:"專案Follow / 跨部門",pts:0.25},
   ],
   fri:[
-    {title:"[一森診所]No.24 網站修改",dept:"DBC",pts:0.25},
-
-    {title:"[蔡宛霖]No.我的診間高效率三件套",dept:"DBC",pts:0.25},
-    {title:"[耀美網站]No.植牙切版",dept:"DBC",pts:1.25},
-    {title:"[陳威樺]No.植牙的關鍵時刻",dept:"DBC",pts:0.25},
-    {title:"設計部獎金制機器人進度",dept:"Design team / AlleyPin",pts:2},
+    {title:"[一森診所] No.",dept:"DBC",pts:0.5},
   ],
 };
 
@@ -443,7 +429,7 @@ function WeeklyDashboard() {
     const blob=new Blob([JSON.stringify({week:"w199",ts:new Date().toISOString(),done:[...doneSet]},null,2)],
       {type:"application/json"});
     const url=URL.createObjectURL(blob);
-    const a=document.createElement("a");a.href=url;a.download="done-w199.json";a.click();
+    const a=document.createElement("a");a.href=url;a.download="done-w200.json";a.click();
     URL.revokeObjectURL(url);showToast("✓ 已匯出打勾狀態");
   };
 
@@ -467,7 +453,7 @@ function WeeklyDashboard() {
   },[]);
 
   const JOY_ID="user://1a59b1f2-b650-4d70-a70d-6e0b333e8962";
-  const WEEK_DATES={"2026-03-09":"mon","2026-03-10":"tue","2026-03-11":"wed","2026-03-12":"thu","2026-03-13":"fri"};
+  const WEEK_DATES={"2026-03-16":"mon","2026-03-17":"tue","2026-03-18":"wed","2026-03-19":"thu","2026-03-20":"fri"};
   const normDept=d=>{
     if(!d)return "DBC";
     const s=d.trim();
