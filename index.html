@@ -72,11 +72,11 @@ function showToast(msg) {
 }
 
 const DAYS = [
-  {key:"mon",label:"MON",date:"3/9"},
-  {key:"tue",label:"TUE",date:"3/10"},
-  {key:"wed",label:"WED",date:"3/11"},
-  {key:"thu",label:"THU",date:"3/12"},
-  {key:"fri",label:"FRI",date:"3/13"},
+  {key:"mon",label:"MON",date:"3/16"},
+  {key:"tue",label:"TUE",date:"3/17"},
+  {key:"wed",label:"WED",date:"3/18"},
+  {key:"thu",label:"THU",date:"3/19"},
+  {key:"fri",label:"FRI",date:"3/20"},
 ];
 const NEXT_DAYS = [
   {key:"mon",label:"MON",date:"3/23"},
@@ -318,7 +318,7 @@ function NextWeekView() {
   return (
     <div style={{padding:"0 0 20px"}}>
       <div style={{fontFamily:"'Geologica',sans-serif",fontSize:11,color:TEXT_MUTED,
-        letterSpacing:"0.08em",marginBottom:14,paddingLeft:2}}>03.16 – 03.20</div>
+        letterSpacing:"0.08em",marginBottom:14,paddingLeft:2}}>'03.23 – 03.27'</div>
       {NEXT_DAYS.map(day=>{
         const evs=nextWeekEvents[day.key]||[];
         return (
@@ -549,7 +549,7 @@ function WeeklyDashboard() {
           <div style={{fontFamily:"'Geologica',sans-serif",fontSize:18,fontWeight:700,
             color:TEXT_PRIMARY,letterSpacing:"-0.02em"}}>This Week working hours in AlleyPin</div>
           <div style={{fontFamily:"'Geologica',sans-serif",fontSize:11,color:TEXT_MUTED,marginTop:2}}>
-            {view==='thisWeek'?'03.09 – 03.13':'03.16 – 03.20'} · Joy
+            '03.23 – 03.27' · Joy
             {view==='thisWeek'&&lastSync&&<span style={{marginLeft:8,opacity:0.6,fontSize:10}}>✓ {lastSync}</span>}
           </div>
           {/* Week toggle */}
