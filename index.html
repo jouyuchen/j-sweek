@@ -31,7 +31,7 @@ button { cursor: pointer; outline: none; border: none; background: none; }
 <body>
 <div id="root"></div>
 <div id="toast"></div>
-<input type="file" id="importFile" accept=".json" style="display:none">
+
 <script type="text/babel">
 const { useState, useEffect } = React;
 
@@ -64,6 +64,17 @@ const eventDoneKey = (d,i)     => `e:${d}::${i}`;
 const carryDoneKey = (disp,orig,i) => `carry:${disp}::${orig}::${i}`;
 const LS_DONE = "done-w200";
 const LS_KEY  = "notion-api-key";
+const PROXY = "https://divine-violet-4469.jouyu-chen-jc.workers.dev";
+const DB_ID = "b42b22da-7634-4f6a-95f9-37ec97ca40ac";
+const JOY_ID = "1a59b1f2-b650-4d70-a70d-6e0b333e8962";
+const WEEKLY_MAP = {
+  "W200":{"id":"309bf447-adda-814d-95c0-f4a9c95c90bf","label":"W200 (本週 3/16–3/20)"},
+  "W201":{"id":"310bf447-adda-813d-9b22-df66abfbddce","label":"W201 (下週 3/23–3/27)"},
+};
+const DAY_DATE_MAP = {
+  mon:"2026-03-16",tue:"2026-03-17",wed:"2026-03-18",thu:"2026-03-19",fri:"2026-03-20",
+};
+const WEEK_DATES = {"2026-03-16":"mon","2026-03-17":"tue","2026-03-18":"wed","2026-03-19":"thu","2026-03-20":"fri"};
 
 function showToast(msg) {
   const t = document.getElementById("toast");
@@ -112,56 +123,68 @@ const nextWeekEvents = {
 
 const notionTasks = {
   mon:[
-    {title:"[Meeting]16.30 設計週會",dept:"Design team / AlleyPin",pts:0.25},
-    {title:"TW - AM 續約合約發送測試",dept:"專案Follow / 跨部門",pts:0.25},
-    {title:"視覺設計師DBC 開票功能優化",dept:"Design team / AlleyPin",pts:1},
-    {title:"[蔡宛霖]No.你心目中的高品質醫療是什麼？",dept:"DBC",pts:0.25},
-    {title:"DBC 專案自動統計更新",dept:"Design team / AlleyPin",pts:0.5},
-    {title:"[陳威樺] No. 修改",dept:"DBC",pts:0.25},
-    {title:"整理量能區，刪除舊票",dept:"Design team / AlleyPin",pts:0.5},
+    {title:"[Meeting]16.30 設計週會",dept:"Design team / AlleyPin",pts:0.25,pageId:null},
+    {title:"TW - AM 續約合約發送測試",dept:"專案Follow / 跨部門",pts:0.25,pageId:"325bf447-adda-81bf-a1ee-d06fc9595697"},
+    {title:"視覺設計師DBC 開票功能優化",dept:"Design team / AlleyPin",pts:1,pageId:"325bf447-adda-8122-acff-c6a6454b8c92"},
+    {title:"[蔡宛霖]No.你心目中的高品質醫療是什麼？",dept:"DBC",pts:0.25,pageId:null},
+    {title:"DBC 專案自動統計更新",dept:"Design team / AlleyPin",pts:0.5,pageId:"325bf447-adda-8184-a9dc-ed06d2b025db"},
+    {title:"[陳威樺] No. 修改",dept:"DBC",pts:0.25,pageId:null},
+    {title:"整理量能區，刪除舊票",dept:"Design team / AlleyPin",pts:0.5,pageId:null},
   ],
   tue:[
-    {title:"[陳威樺] No.舊假牙發黑又飄異味 就像開口就漏餡",dept:"DBC",pts:0.25},
-    {title:"[Meeting] 14.00 1 on 1 with Joy",dept:"Design team / AlleyPin",pts:0.25},
+    {title:"[陳威樺] No.舊假牙發黑又飄異味 就像開口就漏餡",dept:"DBC",pts:0.25,pageId:null},
+    {title:"[Meeting] 14.00 1 on 1 with Joy",dept:"Design team / AlleyPin",pts:0.25,pageId:"325bf447-adda-810a-a3cd-f26fbd13ed25"},
   ],
   wed:[
-    {title:"[蔡宛霖]No.",dept:"DBC",pts:0.25},
-    {title:"[陳威樺] No.明明愛笑卻不敢張口 客製化陶瓷貼片",dept:"DBC",pts:0.25},
-    {title:"官網設計系統",dept:"Design team / AlleyPin",pts:1},
-    {title:"設計部獎金制機器人進度",dept:"Design team / AlleyPin",pts:1},
-    {title:"Tw-AM 合約系統文件製作*2",dept:"專案Follow / 跨部門",pts:0.75},
+    {title:"[蔡宛霖]No.糖尿病 也能安心植牙？",dept:"DBC",pts:0.25,pageId:"325bf447-adda-80db-b684-da19d61a9a89"},
+    {title:"[陳威樺] No.明明愛笑卻不敢張口 客製化陶瓷貼片",dept:"DBC",pts:0.25,pageId:"325bf447-adda-80d7-a0c8-cb6d336ce40b"},
+    {title:"官網設計系統",dept:"Design team / AlleyPin",pts:1,pageId:"317bf447-adda-8068-a570-fcb460a31aed"},
+    {title:"設計部獎金制機器人進度",dept:"Design team / AlleyPin",pts:1,pageId:"310bf447-adda-80b6-ba97-fbfc5eddc89c"},
+    {title:"Tw-AM 合約系統文件製作*2",dept:"專案Follow / 跨部門",pts:0.75,pageId:"325bf447-adda-814d-951b-c01e63184ace"},
   ],
   thu:[
-    {title:"[Meeting] 10.00 OPS",dept:"專案Follow / 跨部門",pts:0.25},
-    {title:"設計專案結案流程文件",dept:"Design team / AlleyPin",pts:1},
+    {title:"[Meeting] 10.00 OPS",dept:"專案Follow / 跨部門",pts:0.25,pageId:"325bf447-adda-8190-87a8-c5972efcd01a"},
+    {title:"設計專案結案流程文件",dept:"Design team / AlleyPin",pts:1,pageId:null},
   ],
   fri:[
-    {title:"[一森診所] No.",dept:"DBC",pts:0.5},
+    {title:"[一森診所] No.",dept:"DBC",pts:0.5,pageId:null},
   ],
 };
 
 // ── UI Components ─────────────────────────────────────────────────────────────
-function Checkbox({onDone}) {
+function Checkbox({onDone,onUndone,isDone}) {
   const [h,setH]=useState(false);
   return (
-    <button onClick={onDone} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
+    <button onClick={isDone?onUndone:onDone}
+      onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
       style={{marginTop:3,flexShrink:0,width:14,height:14,borderRadius:3,
-        border:`1.5px solid ${h?"#7aad8a":BORDER}`,
-        background:h?"rgba(122,173,138,0.15)":"transparent",transition:"all 0.15s"}}/>
+        border:`1.5px solid ${isDone?"#7aad8a":h?"#7aad8a":BORDER}`,
+        background:isDone?"#7aad8a":h?"rgba(122,173,138,0.15)":"transparent",
+        transition:"all 0.15s",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      {isDone&&<span style={{color:"#fff",fontSize:9,lineHeight:1}}>✓</span>}
+    </button>
   );
 }
 
-function TaskCard({task,onDone,carryFrom}) {
+function TaskCard({task,onDone,onUndone,isDone,carryFrom}) {
   const dc=carryFrom?C_CARRYOVER:getDeptColor(task.dept,task.title);
   const dl=getDeptLabel(task.dept,task.title);
   return (
     <div style={{background:BG,border:`1px solid ${BORDER}`,borderLeft:`6px solid ${dc}`,
       borderRadius:"0 6px 6px 0",padding:"7px 10px",
-      display:"flex",alignItems:"flex-start",gap:8,opacity:carryFrom?0.85:1}}>
-      <Checkbox onDone={onDone}/>
+      display:"flex",alignItems:"flex-start",gap:8,
+      opacity:isDone?0.45:carryFrom?0.85:1,
+      transition:"opacity 0.2s"}}>
+      <Checkbox onDone={onDone} onUndone={onUndone} isDone={isDone}/>
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontFamily:"'Noto Sans TC',sans-serif",fontSize:11.5,
-          color:TEXT_PRIMARY,lineHeight:1.5,marginBottom:4,fontWeight:500}}>{task.title}</div>
+          color:isDone?TEXT_MUTED:TEXT_PRIMARY,lineHeight:1.5,marginBottom:4,fontWeight:500,
+          textDecoration:isDone?"line-through":"none"}}>
+          {task.title}
+          {!task.pageId&&<span style={{fontSize:8,color:"#c9a96e",marginLeft:4,
+            background:"rgba(201,169,110,0.15)",padding:"1px 4px",borderRadius:3,
+            verticalAlign:"middle"}}>無ID</span>}
+        </div>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div style={{display:"flex",gap:6,alignItems:"center"}}>
             <span style={{fontFamily:"'Geologica',sans-serif",fontSize:9,
@@ -177,12 +200,12 @@ function TaskCard({task,onDone,carryFrom}) {
   );
 }
 
-function EventCard({ev,onDone}) {
+function EventCard({ev,onDone,onUndone,isDone}) {
   return (
     <div style={{background:BG,border:`1px solid ${BORDER}`,borderLeft:`6px solid ${C_MEETING}`,
       borderRadius:"0 6px 6px 0",padding:"7px 10px",
       display:"flex",alignItems:"flex-start",gap:8}}>
-      <Checkbox onDone={onDone}/>
+      <Checkbox onDone={onDone} onUndone={onUndone} isDone={isDone}/>
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontFamily:"'Geologica',sans-serif",fontSize:9,
           color:C_MEETING,fontWeight:700,letterSpacing:"0.04em",marginBottom:2}}>{ev.time}</div>
@@ -256,13 +279,14 @@ function WeeklyReview({doneSet,taskData}) {
   );
 }
 
-function DayColumn({dayInfo,doneSet,onDone,carryoverTasks,taskData}) {
+function DayColumn({dayInfo,doneSet,onDone,onUndone,carryoverTasks,taskData}) {
   const allTasks=((taskData||notionTasks)[dayInfo.key]||[]).map((t,i)=>({...t,_idx:i}));
-  const tasks=allTasks.filter(t=>!doneSet.has(taskDoneKey(dayInfo.key,t._idx)));
+  const tasks=allTasks; // show all tasks, done ones show with strikethrough
   const allEvents=(calendarEvents[dayInfo.key]||[]).map((e,i)=>({...e,_idx:i}));
   const events=allEvents.filter(e=>!doneSet.has(eventDoneKey(dayInfo.key,e._idx)));
   const totalPts=tasks.reduce((s,t)=>s+t.pts,0);
   const taskDone=allTasks.filter(t=>doneSet.has(taskDoneKey(dayInfo.key,t._idx))).length;
+  const visibleTasks=tasks;
   const visibleCarry=carryoverTasks.filter(c=>!doneSet.has(carryDoneKey(dayInfo.key,c.originKey,c._idx)));
   return (
     <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:8}}>
@@ -274,7 +298,9 @@ function DayColumn({dayInfo,doneSet,onDone,carryoverTasks,taskData}) {
           :<div style={{display:"flex",flexDirection:"column",gap:5}}>
             {events.map(ev=>(
               <EventCard key={`${dayInfo.key}-ev-${ev._idx}`} ev={ev}
-                onDone={()=>onDone(eventDoneKey(dayInfo.key,ev._idx))}/>
+                isDone={doneSet.has(eventDoneKey(dayInfo.key,ev._idx))}
+                onDone={()=>onDone(eventDoneKey(dayInfo.key,ev._idx))}
+                onUndone={()=>onUndone&&onUndone(eventDoneKey(dayInfo.key,ev._idx))}/>
             ))}
           </div>
         }
@@ -297,7 +323,9 @@ function DayColumn({dayInfo,doneSet,onDone,carryoverTasks,taskData}) {
           :<div style={{display:"flex",flexDirection:"column",gap:5}}>
             {tasks.map(t=>(
               <TaskCard key={`${dayInfo.key}-task-${t._idx}`} task={t}
-                onDone={()=>onDone(taskDoneKey(dayInfo.key,t._idx))}/>
+                isDone={doneSet.has(taskDoneKey(dayInfo.key,t._idx))}
+                onDone={()=>onDone(taskDoneKey(dayInfo.key,t._idx),t.pageId)}
+                onUndone={()=>onUndone&&onUndone(taskDoneKey(dayInfo.key,t._idx),t.pageId)}/>
             ))}
             {visibleCarry.length>0&&<>
               {tasks.length>0&&<div style={{borderTop:`1px dashed ${BORDER}`,margin:"4px 0"}}/>}
@@ -421,13 +449,77 @@ function WeeklyDashboard() {
   });
   const [showSettings,setShowSettings]=useState(false);
   const [keyInput,setKeyInput]=useState('');
+  const [showAddForm,setShowAddForm]=useState(false);
+  const [addForm,setAddForm]=useState({title:'',day:'mon',dept:'DBC',pts:'0.25',weekly:'W200'});
+  const [adding,setAdding]=useState(false);
   const visible=DAYS.slice(startIdx,startIdx+2);
 
   useEffect(()=>{
     try{localStorage.setItem(LS_DONE,JSON.stringify([...doneSet]));}catch{}
   },[doneSet]);
 
-  const handleDone=id=>setDoneSet(prev=>new Set([...prev,id]));
+  const updateNotionStatus=async(pageId,done)=>{
+    if(!pageId)return;
+    try{
+      await fetch(`${PROXY}/v1/pages/${pageId}`,{
+        method:"PATCH",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({properties:{"工作狀態":{status:{name:done?"Complete":"In Progress"}}}})
+      });
+    }catch(e){console.warn("Notion status update failed:",e);}
+  };
+
+  const handleDone=(id,pageId)=>{
+    setDoneSet(prev=>new Set([...prev,id]));
+    updateNotionStatus(pageId,true);
+  };
+
+  const handleUndone=(id,pageId)=>{
+    setDoneSet(prev=>{const s=new Set(prev);s.delete(id);return s;});
+    updateNotionStatus(pageId,false);
+  };
+
+  const handleAddTask=async()=>{
+    if(!addForm.title.trim()){showToast("✗ 請輸入票名");return;}
+    setAdding(true);
+    try{
+      const weekly=WEEKLY_MAP[addForm.weekly];
+      const body={
+        parent:{database_id:DB_ID},
+        properties:{
+          "Name":{title:[{text:{content:addForm.title.trim()}}]},
+          "Department ":{select:{name:addForm.dept==="DBC"?"DBC":addForm.dept==="Design"?"Design team / AlleyPin":"專案Follow / 跨部門"}},
+          "Story points":{number:parseFloat(addForm.pts)},
+          "Assign":{people:[{id:JOY_ID}]},
+          "期限":{date:{start:DAY_DATE_MAP[addForm.day]}},
+          "⏰ Weekly":{relation:[{id:weekly.id}]},
+          "工作狀態":{status:{name:"Next Up"}},
+        }
+      };
+      const res=await fetch(`${PROXY}/v1/pages`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(body)
+      });
+      const data=await res.json();
+      if(data.id){
+        // Also add to local taskData
+        const dayKey=addForm.day;
+        setTaskData(prev=>({
+          ...prev,
+          [dayKey]:[...(prev[dayKey]||[]),{title:addForm.title.trim(),dept:addForm.dept==="DBC"?"DBC":addForm.dept==="Design"?"Design team / AlleyPin":"專案Follow / 跨部門",pts:parseFloat(addForm.pts)}]
+        }));
+        setAddForm({title:'',day:'mon',dept:'DBC',pts:'0.25',weekly:'W200'});
+        setShowAddForm(false);
+        showToast("✓ 票已新增到 Notion！");
+      } else {
+        showToast("✗ 新增失敗："+JSON.stringify(data).slice(0,50));
+      }
+    }catch(e){
+      showToast("✗ 錯誤："+e.message);
+    }
+    setAdding(false);
+  };
 
   const handleExport=()=>{
     const blob=new Blob([JSON.stringify({week:"w199",ts:new Date().toISOString(),done:[...doneSet]},null,2)],
@@ -437,27 +529,8 @@ function WeeklyDashboard() {
     URL.revokeObjectURL(url);showToast("✓ 已匯出打勾狀態");
   };
 
-  useEffect(()=>{
-    const input=document.getElementById("importFile");
-    const handler=e=>{
-      const file=e.target.files[0];if(!file)return;
-      const reader=new FileReader();
-      reader.onload=ev=>{
-        try{
-          const obj=JSON.parse(ev.target.result);
-          const arr=Array.isArray(obj)?obj:(obj.done||[]);
-          setDoneSet(new Set(arr));showToast("✓ 匯入成功");
-        }catch{showToast("✗ 格式錯誤");}
-        input.value="";
-      };
-      reader.readAsText(file);
-    };
-    input.addEventListener("change",handler);
-    return()=>input.removeEventListener("change",handler);
-  },[]);
 
-  const JOY_ID="user://1a59b1f2-b650-4d70-a70d-6e0b333e8962";
-  const WEEK_DATES={"2026-03-16":"mon","2026-03-17":"tue","2026-03-18":"wed","2026-03-19":"thu","2026-03-20":"fri"};
+
   const normDept=d=>{
     if(!d)return "DBC";
     const s=d.trim();
@@ -572,8 +645,9 @@ function WeeklyDashboard() {
         {view==='thisWeek'&&(
           <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center"}}>
 
-            <button onClick={handleExport} style={BtnStyle}>↓ 匯出</button>
-            <button onClick={()=>document.getElementById("importFile").click()} style={BtnStyle}>↑ 匯入</button>
+            <button onClick={()=>setShowAddForm(true)}
+              style={{...BtnStyle,background:"#e08d53",color:"#fff",fontWeight:700,fontSize:13,padding:"6px 16px",borderRadius:8}}>＋ 新增票</button>
+
             <div style={{display:"flex",gap:10,alignItems:"center",marginLeft:4}}>
               {[{color:C_DEPT_DBC,label:"DBC"},{color:C_DEPT_DESIGN,label:"Design"},
                 {color:C_DEPT_CROSS,label:"跨部門"},{color:C_MEETING,label:"Meeting"}].map(({color,label})=>(
@@ -595,7 +669,7 @@ function WeeklyDashboard() {
             {DAYS.map((d,i)=>{
               const isActive=i===startIdx||i===startIdx+1;
               const allTasks=((taskData||notionTasks)[d.key]||[]).map((t,idx)=>({...t,_idx:idx}));
-              const remaining=allTasks.filter(t=>!doneSet.has(taskDoneKey(d.key,t._idx))).length;
+              const remaining=((taskData||notionTasks)[d.key]||[]).filter((t,i)=>!doneSet.has(taskDoneKey(d.key,i))).length;
               const hasCal=(calendarEvents[d.key]||[]).length>0;
               const allDone=allTasks.length>0&&remaining===0;
               const hasCarry=getCarryoverForDay(i).length>0;
@@ -638,7 +712,7 @@ function WeeklyDashboard() {
                     {d.label} <span style={{fontWeight:400,color:TEXT_MUTED}}>{d.date}</span>
                   </div>
                   {isFri&&<WeeklyReview doneSet={doneSet} taskData={taskData}/>}
-                  <DayColumn dayInfo={d} doneSet={doneSet} onDone={handleDone}
+                  <DayColumn dayInfo={d} doneSet={doneSet} onDone={handleDone} onUndone={handleUndone}
                     carryoverTasks={getCarryoverForDay(dayIdx)} taskData={taskData}/>
                 </div>
               );
@@ -648,6 +722,95 @@ function WeeklyDashboard() {
       )}
 
       {/* Settings Modal */}
+      {showAddForm&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",
+          display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20}}>
+          <div style={{background:CARD,border:`1px solid ${BORDER}`,borderRadius:16,
+            padding:24,width:"100%",maxWidth:360}}>
+            <div style={{fontFamily:"'Geologica',sans-serif",fontWeight:700,fontSize:14,
+              color:TEXT_PRIMARY,marginBottom:16}}>＋ 新增工作票</div>
+
+            {/* 票名 */}
+            <div style={{marginBottom:12}}>
+              <div style={{fontFamily:"'Geologica',sans-serif",fontSize:10,color:TEXT_MUTED,marginBottom:4}}>票名</div>
+              <input value={addForm.title} onChange={e=>setAddForm(p=>({...p,title:e.target.value}))}
+                placeholder="票名..."
+                style={{width:"100%",padding:"8px 10px",borderRadius:8,border:`1.5px solid ${BORDER}`,
+                  background:SURFACE,fontFamily:"'Noto Sans TC',sans-serif",fontSize:12,
+                  color:TEXT_PRIMARY,outline:"none"}}/>
+            </div>
+
+            {/* 日期 */}
+            <div style={{marginBottom:12}}>
+              <div style={{fontFamily:"'Geologica',sans-serif",fontSize:10,color:TEXT_MUTED,marginBottom:4}}>日期</div>
+              <select value={addForm.day} onChange={e=>setAddForm(p=>({...p,day:e.target.value}))}
+                style={{width:"100%",padding:"8px 10px",borderRadius:8,border:`1.5px solid ${BORDER}`,
+                  background:SURFACE,fontFamily:"'Geologica',sans-serif",fontSize:12,color:TEXT_PRIMARY}}>
+                <option value="mon">MON 3/16</option>
+                <option value="tue">TUE 3/17</option>
+                <option value="wed">WED 3/18</option>
+                <option value="thu">THU 3/19</option>
+                <option value="fri">FRI 3/20</option>
+              </select>
+            </div>
+
+            {/* Department */}
+            <div style={{marginBottom:12}}>
+              <div style={{fontFamily:"'Geologica',sans-serif",fontSize:10,color:TEXT_MUTED,marginBottom:4}}>Department</div>
+              <select value={addForm.dept} onChange={e=>setAddForm(p=>({...p,dept:e.target.value}))}
+                style={{width:"100%",padding:"8px 10px",borderRadius:8,border:`1.5px solid ${BORDER}`,
+                  background:SURFACE,fontFamily:"'Geologica',sans-serif",fontSize:12,color:TEXT_PRIMARY}}>
+                <option value="DBC">DBC</option>
+                <option value="Design">Design team</option>
+                <option value="Cross">跨部門</option>
+              </select>
+            </div>
+
+            {/* Story Points */}
+            <div style={{marginBottom:12}}>
+              <div style={{fontFamily:"'Geologica',sans-serif",fontSize:10,color:TEXT_MUTED,marginBottom:4}}>Story Points</div>
+              <select value={addForm.pts} onChange={e=>setAddForm(p=>({...p,pts:e.target.value}))}
+                style={{width:"100%",padding:"8px 10px",borderRadius:8,border:`1.5px solid ${BORDER}`,
+                  background:SURFACE,fontFamily:"'Geologica',sans-serif",fontSize:12,color:TEXT_PRIMARY}}>
+                <option value="0.125">0.125</option>
+                <option value="0.25">0.25</option>
+                <option value="0.35">0.35</option>
+                <option value="0.5">0.5</option>
+                <option value="0.75">0.75</option>
+                <option value="1">1</option>
+                <option value="1.25">1.25</option>
+                <option value="1.5">1.5</option>
+                <option value="2">2</option>
+              </select>
+            </div>
+
+            {/* Weekly */}
+            <div style={{marginBottom:20}}>
+              <div style={{fontFamily:"'Geologica',sans-serif",fontSize:10,color:TEXT_MUTED,marginBottom:4}}>Weekly</div>
+              <select value={addForm.weekly} onChange={e=>setAddForm(p=>({...p,weekly:e.target.value}))}
+                style={{width:"100%",padding:"8px 10px",borderRadius:8,border:`1.5px solid ${BORDER}`,
+                  background:SURFACE,fontFamily:"'Geologica',sans-serif",fontSize:12,color:TEXT_PRIMARY}}>
+                <option value="W200">W200（本週 3/16–3/20）</option>
+                <option value="W201">W201（下週 3/23–3/27）</option>
+              </select>
+            </div>
+
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>setShowAddForm(false)}
+                style={{flex:1,padding:"9px",borderRadius:8,border:`1.5px solid ${BORDER}`,
+                  background:SURFACE,fontFamily:"'Geologica',sans-serif",fontSize:12,color:TEXT_MUTED}}>
+                取消
+              </button>
+              <button onClick={handleAddTask} disabled={adding}
+                style={{flex:2,padding:"9px",borderRadius:8,border:"none",
+                  background:adding?"#b0bec5":"#8a9eba",color:"#fff",
+                  fontFamily:"'Geologica',sans-serif",fontSize:12,fontWeight:600}}>
+                {adding?"新增中...":"新增到 Notion"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showSettings&&(
         <SettingsModal keyInput={keyInput} setKeyInput={setKeyInput}
           notionKey={notionKey} onSave={k=>setNotionKey(k)}
