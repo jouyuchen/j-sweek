@@ -324,8 +324,8 @@ function DayColumn({dayInfo,doneSet,onDone,onUndone,carryoverTasks,taskData}) {
             {tasks.map(t=>(
               <TaskCard key={`${dayInfo.key}-task-${t._idx}`} task={t}
                 isDone={doneSet.has(taskDoneKey(dayInfo.key,t._idx))}
-                onDone={()=>onDone(taskDoneKey(dayInfo.key,t._idx),t.pageId)}
-                onUndone={()=>onUndone&&onUndone(taskDoneKey(dayInfo.key,t._idx),t.pageId)}/>
+                onDone={()=>onDone(taskDoneKey(dayInfo.key,t._idx))}
+                onUndone={()=>onUndone&&onUndone(taskDoneKey(dayInfo.key,t._idx))}/>
             ))}
             {visibleCarry.length>0&&<>
               {tasks.length>0&&<div style={{borderTop:`1px dashed ${BORDER}`,margin:"4px 0"}}/>}
@@ -458,25 +458,12 @@ function WeeklyDashboard() {
     try{localStorage.setItem(LS_DONE,JSON.stringify([...doneSet]));}catch{}
   },[doneSet]);
 
-  const updateNotionStatus=async(pageId,done)=>{
-    if(!pageId)return;
-    try{
-      await fetch(`${PROXY}/v1/pages/${pageId}`,{
-        method:"PATCH",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({properties:{"工作狀態":{status:{name:done?"Complete":"In Progress"}}}})
-      });
-    }catch(e){console.warn("Notion status update failed:",e);}
-  };
-
-  const handleDone=(id,pageId)=>{
+  const handleDone=(id)=>{
     setDoneSet(prev=>new Set([...prev,id]));
-    updateNotionStatus(pageId,true);
   };
 
-  const handleUndone=(id,pageId)=>{
+  const handleUndone=(id)=>{
     setDoneSet(prev=>{const s=new Set(prev);s.delete(id);return s;});
-    updateNotionStatus(pageId,false);
   };
 
   const handleAddTask=async()=>{
