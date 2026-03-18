@@ -477,10 +477,9 @@ function WeeklyDashboard() {
           "Name":{title:[{text:{content:addForm.title.trim()}}]},
           "Department ":{select:{name:addForm.dept==="DBC"?"DBC":addForm.dept==="Design"?"Design team / AlleyPin":"專案Follow / 跨部門"}},
           "Story points":{number:parseFloat(addForm.pts)},
-          "Assign":{people:[{id:JOY_ID}]},
+          "Assign":{people:[{object:"user",id:JOY_ID}]},
           "期限":{date:{start:DAY_DATE_MAP[addForm.day]}},
           "⏰ Weekly":{relation:[{id:weekly.id}]},
-          "工作狀態":{status:{name:"Next Up"}},
         }
       };
       const res=await fetch(`${PROXY}/v1/pages`,{
